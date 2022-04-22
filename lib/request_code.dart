@@ -39,7 +39,10 @@ class RequestCode {
     var webView = WebView(
       initialUrl: initialURL,
       javascriptMode: JavascriptMode.unrestricted,
-      onPageFinished: (url) => _getUrlData(url),
+      navigationDelegate: (NavigationRequest request) {
+        _getUrlData(request.url);
+        return NavigationDecision.navigate;
+      },
     );
 
     await Navigator.of(_config.context!)
