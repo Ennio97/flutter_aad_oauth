@@ -37,14 +37,17 @@ class RequestCode {
     var webView = WebView(
       initialUrl: initialURL,
       javascriptMode: JavascriptMode.unrestricted,
-      onPageFinished: (url) => _geturlData(url),
+      navigationDelegate: (NavigationRequest request) {
+        _getUrlData(request.url);
+        return NavigationDecision.navigate;
+      },
     );
 
     await Navigator.of(_config.context!).push(MaterialPageRoute(
         builder: (context) => Scaffold(body: SafeArea(child: webView))));
   }
 
-  _geturlData(String _url) {
+  _getUrlData(String _url) {
     var url = _url.replaceFirst('#', "?");
     Uri uri = Uri.parse(url);
 
