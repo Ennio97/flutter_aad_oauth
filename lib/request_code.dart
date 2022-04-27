@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:flutter/material.dart'
-    show MaterialPageRoute, Navigator, SafeArea, Scaffold;
+import 'package:flutter/material.dart' show MaterialPageRoute, Navigator, SafeArea, Scaffold;
 import 'package:flutter/widgets.dart';
+import 'package:flutter_aad_oauth/view/web_view_page_login.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'model/config.dart';
 import 'request/authorization_request.dart';
@@ -21,8 +21,7 @@ class RequestCode {
     var code;
     final String urlParams = _constructUrlParams();
     if (_config.context != null) {
-      String initialURL =
-          ("${_authorizationRequest.url}?$urlParams").replaceAll(" ", "%20");
+      String initialURL = ("${_authorizationRequest.url}?$urlParams").replaceAll(" ", "%20");
 
       await _mobileAuth(initialURL);
     } else {
@@ -34,17 +33,16 @@ class RequestCode {
   }
 
   _mobileAuth(String initialURL) async {
-    var webView = WebView(
-      initialUrl: initialURL,
-      javascriptMode: JavascriptMode.unrestricted,
-      navigationDelegate: (NavigationRequest request) {
-        _getUrlData(request.url);
-        return NavigationDecision.navigate;
-      },
-    );
+    await Navigator.of(_config.context!).push(
+      MaterialPageRoute(
+        builder: (context) => WebViewPageLogin(
 
-    await Navigator.of(_config.context!).push(MaterialPageRoute(
-        builder: (context) => Scaffold(body: SafeArea(child: webView))));
+          initialUrl: initialURL,
+          onPageDispose: () => _onCodeListener.addError(new Exception("Access denied or authentation canceled.")),
+          onUrlChanged: (url) => _getUrlData(url),
+        ),
+      ),
+    );
   }
 
   _getUrlData(String _url) {
@@ -53,8 +51,7 @@ class RequestCode {
 
     if (uri.queryParameters["error"] != null) {
       Navigator.of(_config.context!).pop();
-      _onCodeListener
-          .addError(new Exception("Access denied or authentation canceled."));
+      _onCodeListener.addError(new Exception("Access denied or authentation canceled."));
     }
 
     var token = uri.queryParameters["code"];
@@ -68,16 +65,13 @@ class RequestCode {
     CookieManager().clearCookies();
   }
 
-  Stream<String?> get _onCode =>
-      _onCodeStream ??= _onCodeListener.stream.asBroadcastStream();
+  Stream<String?> get _onCode => _onCodeStream ??= _onCodeListener.stream.asBroadcastStream();
 
-  String _constructUrlParams() =>
-      _mapToQueryParams(_authorizationRequest.parameters);
+  String _constructUrlParams() => _mapToQueryParams(_authorizationRequest.parameters);
 
   String _mapToQueryParams(Map<String, String> params) {
     final queryParams = <String>[];
-    params
-        .forEach((String key, String value) => queryParams.add("$key=$value"));
+    params.forEach((String key, String value) => queryParams.add("$key=$value"));
     return queryParams.join("&");
   }
 
