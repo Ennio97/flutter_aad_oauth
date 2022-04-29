@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -14,15 +17,28 @@ class WebViewPageLogin extends StatefulWidget {
 }
 
 class _WebViewPageLoginState extends State<WebViewPageLogin> {
+
+  @override
+  void initState() {
+    if (Platform.isAndroid) WebView.platform = AndroidWebView();
+    super.initState();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: WebView(
+            zoomEnabled: false,
+            gestureNavigationEnabled: true,
+            //gestureRecognizers: Set()..add(Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())),
             debuggingEnabled: kDebugMode,
             initialUrl: widget.initialUrl,
             javascriptMode: JavascriptMode.unrestricted,
-            navigationDelegate: _onWebViewUrlChange),
+            onPageFinished: !Platform.isIOS ? _onPageFinished : null,
+            navigationDelegate: Platform.isIOS ? _onWebViewUrlChange : null
+        ),
       ),
     );
   }
@@ -33,6 +49,13 @@ class _WebViewPageLoginState extends State<WebViewPageLogin> {
     }
     return NavigationDecision.navigate;
   }
+
+  void _onPageFinished(String url) {
+    if (widget.onUrlChanged != null) {
+      widget.onUrlChanged!.call(url);
+    }
+  }
+
 
   @override
   void dispose() {
